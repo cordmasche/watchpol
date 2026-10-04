@@ -1,0 +1,20 @@
+# Local PostgreSQL for development:   docker compose up -d
+# Data persists in the "pgdata" volume. Reset everything with: docker compose down -v
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres   # superuser, only used for setup
+    ports:
+      - "127.0.0.1:5432:5432"       # only reachable from this computer
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/01-setup.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

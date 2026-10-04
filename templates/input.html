@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Vorfall melden · WatchPol{% endblock %}
+{% block content %}
+<div class="stage">
+  <div class="mapwrap">
+    <div id="map" class="map"></div>
+    <p class="map-hint" id="map-hint">Auf die Karte tippen, um den Ort zu setzen</p>
+  </div>
+
+  <aside class="panel">
+    <h1 class="panel-title">Neuer Vorfall</h1>
+
+    <form id="event-form" novalidate>
+      <fieldset class="group">
+        <legend>Art des Vorfalls</legend>
+        <div class="chip-grid" id="type-chips"></div>
+        <span class="err" data-for="event_type"></span>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Ort</legend>
+        <div class="row">
+          <label class="mini">Breite <input id="f-lat" name="lat" type="number" step="any" placeholder="52.4869"></label>
+          <label class="mini">Länge <input id="f-lon" name="lon" type="number" step="any" placeholder="13.4244"></label>
+        </div>
+        <button type="button" id="locate" class="btn ghost">Meinen Standort verwenden</button>
+        <span class="err" data-for="lat"></span>
+      </fieldset>
+
+      <div id="main-fields"></div>
+
+      <details class="extra">
+        <summary>Weitere Angaben</summary>
+        <div class="row">
+          <fieldset class="group">
+            <legend>Verifiziert</legend>
+            <div class="chip-row">
+              <label class="chip"><input type="radio" name="verified" value="yes"><span>Ja</span></label>
+              <label class="chip"><input type="radio" name="verified" value="no" checked><span>Nein</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="group">
+            <legend>Simuliert (Test)</legend>
+            <div class="chip-row">
+              <label class="chip"><input type="radio" name="simulated" value="yes"><span>Ja</span></label>
+              <label class="chip"><input type="radio" name="simulated" value="no" checked><span>Nein</span></label>
+            </div>
+          </fieldset>
+        </div>
+        <div id="extra-fields"></div>
+      </details>
+
+      <button type="submit" class="btn primary block">Meldung absenden</button>
+      <p id="form-status" class="status" role="status"></p>
+    </form>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='input.js') }}"></script>{% endblock %}

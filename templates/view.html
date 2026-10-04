@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Karte · WatchPol{% endblock %}
+{% block content %}
+<div class="topbar">
+  <form id="quick-search" class="search" role="search">
+    <input id="q" name="q" type="search" placeholder="Suchen (Text oder Meldungs-ID)" aria-label="Suchen">
+  </form>
+  <div class="chip-row" id="range-chips" role="group" aria-label="Zeitraum">
+    <button type="button" class="chip-btn" data-days="0">Heute</button>
+    <button type="button" class="chip-btn" data-days="7">7 Tage</button>
+    <button type="button" class="chip-btn" data-days="30">30 Tage</button>
+    <button type="button" class="chip-btn active" data-days="">Alle</button>
+  </div>
+  <div class="chip-row">
+    <button type="button" class="chip-btn toggle on" id="toggle-heat" aria-pressed="true">Heatmap</button>
+    <button type="button" class="chip-btn toggle" id="toggle-table" aria-pressed="false">Tabelle</button>
+  </div>
+  <a class="btn primary" href="{{ url_for('input_page') }}">+ Vorfall melden</a>
+</div>
+
+<div class="stage">
+  <div class="mapwrap">
+    <div id="map" class="map"></div>
+
+    <div class="legend">
+      <strong>Meldedichte</strong>
+      <span class="ramp"></span>
+      <span class="ramp-labels"><em>gering</em><em>hoch</em></span>
+      <ul id="legend-types"></ul>
+      <span class="legend-note"><i class="ring"></i> weißer Rand = verifiziert</span>
+      <span class="legend-note"><i class="ring dashed"></i> gestrichelt = simuliert</span>
+    </div>
+
+    <section class="drawer" id="drawer" hidden>
+      <div class="drawer-bar">
+        <span id="result-summary"></span>
+        <button type="button" id="download-csv" class="btn ghost small" disabled>CSV herunterladen</button>
+      </div>
+      <div class="table-wrap"><table id="results-table"></table></div>
+    </section>
+  </div>
+
+  <aside class="panel">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="list">Meldungen</button>
+      <button type="button" class="tab" data-tab="sql">SQL</button>
+    </div>
+
+    <div class="tab-pane active" data-pane="list">
+      <h1 class="panel-title">Aktuelle Meldungen</h1>
+      <p class="panel-sub" id="list-summary">Lade …</p>
+
+      <details class="extra" id="filters">
+        <summary>Filter</summary>
+        <form id="search-form">
+          <label class="mini">Art des Vorfalls
+            <select name="event_type" id="f-type"><option value="">alle</option></select></label>
+          <div class="row">
+            <label class="mini">Verifiziert
+              <select name="verified" id="f-verified"><option value="">alle</option><option value="yes">ja</option><option value="no">nein</option></select></label>
+            <label class="mini">Simuliert
+              <select name="simulated" id="f-simulated"><option value="">alle</option><option value="yes">ja</option><option value="no">nein</option></select></label>
+          </div>
+          <div class="row">
+            <label class="mini">Von <input name="date_from" id="f-from" type="date"></label>
+            <label class="mini">Bis <input name="date_to" id="f-to" type="date"></label>
+          </div>
+          <label class="check"><input type="checkbox" name="in_view" id="f-inview"> Nur aktueller Kartenausschnitt</label>
+          <div class="row">
+            <button type="submit" class="btn primary small">Anwenden</button>
+            <button type="reset" class="btn ghost small">Zurücksetzen</button>
+          </div>
+        </form>
+      </details>
+
+      <ol class="cards" id="cards"></ol>
+    </div>
+
+    <form id="sql-form" class="tab-pane" data-pane="sql">
+      <h1 class="panel-title">SQL-Abfrage</h1>
+      <p class="panel-sub">Nur lesend, eine SELECT-Abfrage. Ergebnisse mit <code>lat</code> und <code>lon</code> erscheinen auf der Karte.</p>
+      <label class="mini">Beispiel
+        <select id="sql-examples">
+          <option value="">— Beispiel wählen —</option>
+          <option>SELECT * FROM events ORDER BY reported_at DESC LIMIT 100</option>
+          <option>SELECT event_type, COUNT(*) AS n, COUNT(*) FILTER (WHERE taken_into_custody) AS gewahrsam FROM events GROUP BY event_type ORDER BY n DESC</option>
+          <option>SELECT reporter_role, COUNT(*) AS n FROM events GROUP BY reporter_role ORDER BY n DESC</option>
+          <option>SELECT * FROM events WHERE verified AND NOT simulated</option>
+          <option>SELECT * FROM events WHERE event_type = 'festnahme' AND reported_at > now() - interval '7 days'</option>
+          <option>SELECT reported_at::date AS tag, COUNT(*) AS n FROM events GROUP BY tag ORDER BY tag</option>
+        </select>
+      </label>
+      <label class="mini">Abfrage
+        <textarea name="sql" id="f-sql" rows="8" spellcheck="false">SELECT * FROM events ORDER BY reported_at DESC LIMIT 100</textarea>
+      </label>
+      <button type="submit" class="btn primary block">Ausführen <small>(Strg/⌘ + Enter)</small></button>
+      <details class="extra">
+        <summary>Spalten der Tabelle <code>events</code></summary>
+        <ul id="column-list" class="columns"></ul>
+      </details>
+    </form>
+
+    <p id="query-status" class="status" role="status"></p>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/leaflet-heat.js') }}"></script>
+<script src="{{ url_for('static', filename='view.js') }}"></script>
+{% endblock %}
